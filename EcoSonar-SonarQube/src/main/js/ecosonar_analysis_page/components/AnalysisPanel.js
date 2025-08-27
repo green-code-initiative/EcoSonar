@@ -67,7 +67,7 @@ export default function AnalysisPanel (props) {
         const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         const fileExtension = '.xlsx'
         const blob = new Blob([buffer], { type: fileType })
-        saveAs(blob, './audits' + fileExtension)
+        saveAs(blob, projectName + ' - EcoSonar Audit' + fileExtension)
         setLoading(false)
       })
       .catch((err) => {

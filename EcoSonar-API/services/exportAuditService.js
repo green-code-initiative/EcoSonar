@@ -138,7 +138,7 @@ function formatExcelSheet (urlName, index, workbook, projectName, analysis, date
   if (urlName !== '') {
     sheet = workbook.addWorksheet('url' + index)
   } else {
-    sheet = workbook.addWorksheet(projectName)
+    sheet = workbook.addWorksheet(projectName.replace(":", " "))
   }
   let row = sheet.getRow(1)
   row.getCell(1).value = 'EcoSonar Analysis'

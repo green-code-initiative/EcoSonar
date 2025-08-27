@@ -66,7 +66,7 @@ export default class AnalysisPerUrlPanel extends React.PureComponent {
     })
     getAnalysisUrlConfiguration(this.state.projectName, this.state.selectedUrl)
       .then((res) => {
-        if (res !== undefined) {
+        if (res !== undefined && res.lastAnalysis.greenit !== null && res.lastAnalysis.lighthouse !== null && res.deployments.greenit.length !== 0 && res.deployments.lighthouse.length !== 0) {
           this.setState({
             greenItLastAnalysis: res.lastAnalysis.greenit,
             lighthouseLastAnalysis: res.lastAnalysis.lighthouse,

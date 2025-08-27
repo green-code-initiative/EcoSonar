@@ -132,6 +132,7 @@ RetrieveAnalysisService.prototype.getUrlAnalysis = async function (projectName, 
       reject(new SystemError())
     } else {
       const analysis = {
+        allowW3c: process.env.ECOSONAR_ENV_ALLOW_EXTERNAL_API || 'false',
         deployments: {
           greenit: greenitAnalysisDeployment,
           lighthouse: lighthouseResultDeployment,
