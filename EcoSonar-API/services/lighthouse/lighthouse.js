@@ -8,8 +8,9 @@ import loggerService from '../../loggers/traces.js'
 
 export default async function lighthouseAnalysis (urlList, projectName, username, password) {
   const browserArgs = [
-    '--no-sandbox', // can't run inside docker without
-    '--disable-setuid-sandbox', // but security issues
+    '--no-sandbox',
+    '--disable-dev-shm-usage', // can't run inside docker without
+    '--disable-setuid-sandbox',
     '--ignore-certificate-errors',
     '--window-size=1920,1080',
     '--start-maximized',
@@ -65,8 +66,9 @@ export default async function lighthouseAnalysis (urlList, projectName, username
           } 
           //If the url requires an authentication
           if (authenticatedPage) {
-            loggerService.info('Light house analysis with authentication in progress for the url '+ authenticatedPage.url());
-            await generateReportForHome(authenticatedPage.url(), index);
+            const targetUrl = authenticatedPage ? authenticatedPage.url() : url
+			console.log('Light house analysis in progress for the url ' + targetUrl)
+			await generateReportForHome(targetUrl, index)
           } else {
             lighthouseResults = await lighthouse(url, { disableStorageReset: true }, config, page)
             loggerService.info('Light house analysis without authentication in progress for the url '+ url);
