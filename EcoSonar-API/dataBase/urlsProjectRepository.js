@@ -200,7 +200,29 @@ const UrlsProjectRepository = function () {
         })
     })
   }
+  /**
+ * Create a new project with no urls
+ * @param {string} projectName project name
+ */
+this.createProject = async function (projectName) {
+  return new Promise((resolve, reject) => {
+    urlsprojects.create({
+      idKey: uniqid(),
+      projectName,
+      urlName: ''
+    })
+      .then((result) => {
+        loggerService.info(`CREATE PROJECT - Project ${projectName} created`)
+        resolve(result)
+      })
+      .catch((error) => {
+        loggerService.error('\x1b[31m%s\x1b[0m', error)
+        reject(new SystemError())
+      })
+  })
 }
+}
+
 
 const urlsProjectRepository = new UrlsProjectRepository()
 export default urlsProjectRepository
