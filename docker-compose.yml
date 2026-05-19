@@ -64,7 +64,7 @@ services:
     restart: unless-stopped
 
   db:
-    image: postgres:13
+    image: postgres:17
     container_name: ecosonar_postgresql
     networks:
       - sonarnet
@@ -75,7 +75,7 @@ services:
       POSTGRES_USER: sonar
       POSTGRES_PASSWORD: sonar
       POSTGRES_DB: sonarqube
-      PGDATA: postgresql_data:/var/lib/postgresql/data/pgdata
+      PGDATA: /var/lib/postgresql/data/pgdata
     restart: unless-stopped
 
 networks:
