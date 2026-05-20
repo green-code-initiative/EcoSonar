@@ -1,9 +1,7 @@
 # See : https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#running-puppeteer-in-docker
-FROM node:18-slim
+FROM node:22-slim
 
 # Uncomment if you need to configure proxy.
-# You can init these variables by using --build-args during docker build
-# Example : docker build [...] --build-args http_proxy=http://<user>:<password>@<host>:<port>
 #ENV HTTP_PROXY=$http_proxy
 #ENV HTTPS_PROXY=$https_proxy
 #ENV NO_PROXY=$no_proxy
@@ -16,10 +14,10 @@ RUN apt-get update \
     && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 libx11-xcb1 libnss3-tools curl \
       --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY . .
 
-# Uncomment if you need to configure proxy.
 #RUN npm config set proxy $HTTP_PROXY
 
 RUN npm i \
@@ -31,11 +29,9 @@ RUN npm i \
 
 USER pptruser
 
-# To avoid "Error: ENOENT: no such file or directory, open '/app/dist/greenItBundle.js'"
 RUN npm i \
     && node node_modules/puppeteer/install.mjs
 
 ENV PORT=3000
 EXPOSE 3000
-
-CMD ["npm", "start" ]
+CMD ["npm", "start"]
