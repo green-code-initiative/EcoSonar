@@ -23,7 +23,7 @@ export default async function lighthouseAnalysis (urlList, projectName, username
   }
 
   const browserLight = await puppeteer.launch({
-    headless: 'new',
+    headless: true,
     args: browserArgs,
     timeout: 0,
     ignoreHTTPSErrors: true,
@@ -39,7 +39,7 @@ export default async function lighthouseAnalysis (urlList, projectName, username
 
   const generateReportForHome = async (url, index) => {
     //Launch lighthouse analysis
-    const homePageReport = await lighthouse(url, config);
+    const homePageReport = await lighthouse(url, { port: 36951, ...config })
     const homePageReportLhr = homePageReport.lhr;
     results[index] = { ...homePageReportLhr, url }
     loggerService.info(`home page performance report generated successfully`);
