@@ -1,82 +1,123 @@
-version: "3.3"
+# EcoSonar - Docker Compose
+# Prerequisites:
+#   1. Copy .env.example to .env and set your passwords.
+#   2. Run ./tool_build.sh to build the SonarQube plugin JAR first.
+#   3. Then: docker compose up -d
+# Author : Ashvin Appigadoo
+#
+# Image versions pinned:
+#   - sonarqube: 2026.1.1-community  (LTA — Long-Term Active release)
+#   - postgres:  16-alpine            (min required by SonarQube >= 2026.2 is 14;
+#                                      16 is current stable LTS)
+#   - mongo:     7.0                  (pinned major; avoids surprise breaking changes)
+
 services:
+
   mongodb:
-    image: mongo:latest
-    restart: on-failure
+    image: mongo:7.0
     container_name: mongo-ecosonar
+    restart: on-failure
     networks:
       - sonarnet
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: mongodb
-      MONGO_INITDB_ROOT_PASSWORD: mongodb
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      # Passed through to mongo-init.sh for app user creation
+      MONGO_USERNAME: ${MONGO_USERNAME}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
     volumes:
-      - mongodb_data:/data
-      - ./docker-compose/docker-entrypoint-initdb.d/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - mongodb_data:/data/db
+      - ./docker-compose/docker-entrypoint-initdb.d/mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   api-ecosonar:
     build: ./EcoSonar-API
     container_name: ecosonar_api
-    ports:
-      - "3000:3000"
+    restart: unless-stopped
     networks:
       - sonarnet
+    ports:
+      - "${ECOSONAR_API_PORT:-3000}:3000"
+      - "3002:3002"
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     environment:
-      ECOSONAR_ENV_CLOUD_PROVIDER: local
-      ECOSONAR_ENV_DB_NAME: EcoSonar
-      ECOSONAR_ENV_DB_TYPE: MongoDB
-      ECOSONAR_ENV_CLUSTER: ecosonar:ecosonar@mongodb
-      ECOSONAR_ENV_SONARQUBE_SERVER_URL: http://localhost:9000
-      ECOSONAR_ENV_LOCAL_DEV_SERVER_URL: http://localhost:3000
-    restart: unless-stopped
+      ECOSONAR_ENV_CLOUD_PROVIDER: ${ECOSONAR_ENV_CLOUD_PROVIDER:-local}
+      ECOSONAR_ENV_DB_NAME: ${ECOSONAR_ENV_DB_NAME:-EcoSonar}
+      ECOSONAR_ENV_DB_TYPE: ${ECOSONAR_ENV_DB_TYPE:-MongoDB}
+      # Connection string uses the dedicated app user created by mongo-init.js
+      ECOSONAR_ENV_CLUSTER: ${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb
+      ECOSONAR_ENV_SONARQUBE_SERVER_URL: ${ECOSONAR_ENV_SONARQUBE_SERVER_URL:-http://localhost:9000}
+      ECOSONAR_ENV_LOCAL_DEV_SERVER_URL: ${ECOSONAR_ENV_LOCAL_DEV_SERVER_URL:-http://localhost:3000}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:3000/api/version"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — SonarQube's relational database
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: ecosonar_postgresql
+    restart: unless-stopped
+    networks:
+      - sonarnet
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   sonar:
-    image: sonarqube:lts-community
+    image: sonarqube:26.1.0.118079-community
     container_name: ecosonar_sonarqube
-    ports:
-      - "9000:9000"
+    restart: unless-stopped
     networks:
       - sonarnet
+    ports:
+      - "${SONARQUBE_PORT:-9000}:9000"
     depends_on:
-      - db
-      - api-ecosonar
+      db:
+        condition: service_healthy
+      api-ecosonar:
+        condition: service_healthy
     environment:
-      SONAR_JDBC_USERNAME: sonar
-      SONAR_JDBC_PASSWORD: sonar
-      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonarqube
-      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: 'true'
+      SONAR_JDBC_USERNAME: ${POSTGRES_USER}
+      SONAR_JDBC_PASSWORD: ${POSTGRES_PASSWORD}
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
     volumes:
-      - ./EcoSonar-SonarQube/target/:/opt/sonarqube/extensions/plugins/
-      - ./EcoSonar-SonarQube/ecocode/ecocode-android-1.1.0.jar:/opt/sonarqube/extensions/plugins/ecocode-android-1.1.0.jar
-      - ./EcoSonar-SonarQube/ecocode/ecocode-ios-1.1.0.jar:/opt/sonarqube/extensions/plugins/ecocode-ios-1.1.0.jar:ro
-      - ./EcoSonar-SonarQube/ecocode/ecocode-java-plugin-1.6.2.jar:/opt/sonarqube/extensions/plugins/ecocode-java-plugin-1.6.2.jar:ro
-      - ./EcoSonar-SonarQube/ecocode/ecocode-javascript-plugin-1.5.0.jar:/opt/sonarqube/extensions/plugins/ecocode-javascript-plugin-1.5.0.jar:ro
-      - ./EcoSonar-SonarQube/ecocode/ecocode-php-plugin-1.5.1.jar:/opt/sonarqube/extensions/plugins/ecocode-php-plugin-1.5.1.jar:ro
-      - ./EcoSonar-SonarQube/ecocode/ecocode-python-plugin-1.4.4.jar:/opt/sonarqube/extensions/plugins/ecocode-python-plugin-1.4.4.jar:ro
-      - ./EcoSonar-SonarQube/ecocode/ecocode-csharp-plugin-1.1.0.jar:/opt/sonarqube/extensions/plugins/ecocode-csharp-plugin-1.1.0.jar:ro
+
+      - ./EcoSonar-SonarQube/target/ecosonar-3.8.jar:/opt/sonarqube/extensions/plugins/ecosonar-3.8.jar:ro
+      - ./EcoSonar-SonarQube/ecocode/:/opt/sonarqube/extensions/plugins/ecocode/:ro
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
       - sonarqube_data:/opt/sonarqube/data
-    restart: unless-stopped
-
-  db:
-    image: postgres:13
-    container_name: ecosonar_postgresql
-    networks:
-      - sonarnet
-    volumes:
-      - postgresql:/var/lib/postgresql
-      - postgresql_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: sonar
-      POSTGRES_PASSWORD: sonar
-      POSTGRES_DB: sonarqube
-      PGDATA: postgresql_data:/var/lib/postgresql/data/pgdata
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --spider http://localhost:9000/api/system/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
 
 networks:
   sonarnet:
@@ -86,6 +127,5 @@ volumes:
   sonarqube_data:
   sonarqube_logs:
   sonarqube_extensions:
-  postgresql:
   postgresql_data:
   mongodb_data:

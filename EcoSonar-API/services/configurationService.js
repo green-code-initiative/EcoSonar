@@ -3,133 +3,77 @@ import urlsProjectRepository from '../dataBase/urlsProjectRepository.js'
 import SystemError from '../utils/SystemError.js'
 import loggerService from '../loggers/traces.js'
 
-class ConfigurationService { }
+class ConfigurationService {}
+
+// Shared helper: get project idKey, auto-creating the project if it doesn't exist
+async function getOrCreateProject(projectName) {
+  let result = await urlsProjectRepository.getUrlProject(projectName)
+
+  if (result == null) {
+    loggerService.info(`PROJECT - No project named ${projectName} found, creating it`)
+    result = await urlsProjectRepository.createProject(projectName)
+  }
+
+  return result.idKey
+}
 
 ConfigurationService.prototype.saveConfiguration = async function (projectName, w3cBool, carbonBool) {
-  let systemError = false
-  let idKey = null;
-  let configExist = false;
+  let idKey = null
 
-  await urlsProjectRepository.getUrlProject(projectName)
-    .then((result) => {
-      idKey = result.idKey })
-    .catch(() => { systemError = true })
-
-  if (idKey == null) {
-    res.status(404).json({ error: 'No project named ' + projectName + ' found' })
+  try {
+    idKey = await getOrCreateProject(projectName)
+  } catch {
+    throw new SystemError()
   }
 
   loggerService.info(`GET CONFIGURATION - Checking if project ${projectName} already has a config`)
-  await configurationRepository.findConfiguration(idKey)
-    .then((result) => {
-      if (result != null) {
-        configExist = true
-        loggerService.info(`GET CONFIGURATION - Project ${projectName} config present`)
-      }
-    })
+  const existing = await configurationRepository.findConfiguration(idKey)
 
-  if (configExist == false) {
+  if (existing == null) {
     loggerService.info(`GET CONFIGURATION - Creating a config for the project ${projectName}`)
-    return new Promise((resolve, reject) => {
-      if (!systemError && idKey !== null) {
-        configurationRepository.insertConfiguration(idKey, w3cBool, carbonBool)
-          .then(() => resolve())
-          .catch((error) => reject(error))     
-      } 
-       else {
-        reject(new SystemError())
-    }})
+    return configurationRepository.insertConfiguration(idKey, w3cBool, carbonBool)
   } else {
-    return new Promise((resolve, reject) => {
-      configurationRepository.findConfiguration(idKey)
-        .then((existingConfig) => {
-          if (existingConfig === null) {
-            resolve({ Configuration: '' })
-          }
-          resolve({ Configuration: existingConfig })
-        }).catch((err) => {
-          reject(err)
-        })
-    })
+    loggerService.info(`GET CONFIGURATION - Project ${projectName} config present`)
+    return { Configuration: existing ?? '' }
   }
 }
 
-ConfigurationService.prototype.updateConfiguration = async function (res, projectName, w3cBool, carbonBool) {
-  let systemError = false
-  let idKey = null;
+ConfigurationService.prototype.updateConfiguration = async function (projectName, w3cBool, carbonBool) {
+  let idKey = null
 
-  await urlsProjectRepository.getUrlProject(projectName)
-    .then((result) => {
-      idKey = result.idKey })
-    .catch(() => { systemError = true })
-
-  if (idKey == null) {
-    res.status(404).json({ error: 'No project named ' + projectName + ' found' })
+  try {
+    idKey = await getOrCreateProject(projectName)
+  } catch {
+    throw new SystemError()
   }
-  return new Promise((resolve, reject) => {
-    if (!systemError && idKey !== null) {
-      configurationRepository.updateConfiguration(idKey, w3cBool, carbonBool)
-        .then(() => resolve())
-        .catch((error) => reject(error))     
-    } 
-     else {
-      reject(new SystemError())
-    }
-  })
+
+  return configurationRepository.updateConfiguration(idKey, w3cBool, carbonBool)
 }
 
-ConfigurationService.prototype.getConfiguration = async function (projectName, res) {
+ConfigurationService.prototype.getConfiguration = async function (projectName) {
+  let idKey = null
 
-  let systemError = false
-  let idKey = null;
-
-  await urlsProjectRepository.getUrlProject(projectName)
-  .then((result) => {
-    idKey = result.idKey })
-  .catch(() => { systemError = true })
-
-  if (idKey == null) {
-    res.status(404).json({ error: 'No project named ' + projectName + ' found' })
+  try {
+    idKey = await getOrCreateProject(projectName)
+  } catch {
+    throw new SystemError()
   }
 
-  return new Promise((resolve, reject) => {
-    configurationRepository.findConfiguration(idKey)
-      .then((existingConfig) => {
-        if (existingConfig === null) {
-          resolve({ Configuration: '' })
-        }
-        resolve({ Configuration: existingConfig })
-      }).catch((err) => {
-        reject(err)
-      })
-  })
+  const existingConfig = await configurationRepository.findConfiguration(idKey)
+  return { Configuration: existingConfig ?? '' }
 }
 
-ConfigurationService.prototype.getW3CConfig = async function (projectName, res) {
+ConfigurationService.prototype.getW3CConfig = async function (projectName) {
+  let idKey = null
 
-  let systemError = false
-  let idKey = null;
-
-  await urlsProjectRepository.getUrlProject(projectName)
-  .then((result) => {
-    idKey = result.idKey })
-  .catch(() => { systemError = true })
-
-  if (idKey == null) {
-    res.status(404).json({ error: 'No project named ' + projectName + ' found' })
+  try {
+    idKey = await getOrCreateProject(projectName)
+  } catch {
+    throw new SystemError()
   }
 
-  return new Promise((resolve, reject) => {
-    configurationRepository.findConfiguration(idKey)
-      .then((existingConfig) => {
-        if (existingConfig === null) {
-          resolve({ Configuration: '' })
-        }
-        resolve({ Configuration: existingConfig.W3C })
-      }).catch((err) => {
-        reject(err)
-      })
-  })
+  const existingConfig = await configurationRepository.findConfiguration(idKey)
+  return { Configuration: existingConfig?.W3C ?? '' }
 }
 
 const configurationService = new ConfigurationService()

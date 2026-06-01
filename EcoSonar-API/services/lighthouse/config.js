@@ -3,7 +3,7 @@ import viewPortParams from '../../utils/viewportParams.js'
 export default {
   extends: 'lighthouse:default',
   settings: {
-    onlyCategories: ['performance', 'accessibility'],
+    onlyCategories: ['performance', 'accessibility', 'best-practices'],
     formFactor: 'desktop',
     screenEmulation: {
       mobile: false,
