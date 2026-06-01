@@ -29,13 +29,12 @@ ConfigurationService.prototype.saveConfiguration = async function (projectName, 
   loggerService.info(`GET CONFIGURATION - Checking if project ${projectName} already has a config`)
   const existing = await configurationRepository.findConfiguration(idKey)
 
-  if (existing != null) {
-    loggerService.info(`GET CONFIGURATION - Project ${projectName} config present`)
-    const existingConfig = await configurationRepository.findConfiguration(idKey)
-    return { Configuration: existingConfig ?? '' }
-  } else {
+  if (existing == null) {
     loggerService.info(`GET CONFIGURATION - Creating a config for the project ${projectName}`)
     return configurationRepository.insertConfiguration(idKey, w3cBool, carbonBool)
+  } else {
+    loggerService.info(`GET CONFIGURATION - Project ${projectName} config present`)
+    return { Configuration: existing ?? '' }
   }
 }
 
