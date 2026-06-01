@@ -66,7 +66,7 @@ export default async function lighthouseAnalysis (urlList, projectName, username
           } 
           //If the url requires an authentication
           if (authenticatedPage) {
-            const targetUrl = authenticatedPage ? authenticatedPage.url() : url
+            const targetUrl = authenticatedPage.url()
 			console.log('Light house analysis in progress for the url ' + targetUrl)
 			await generateReportForHome(targetUrl, index)
           } else {
