@@ -205,21 +205,18 @@ const UrlsProjectRepository = function () {
  * @param {string} projectName project name
  */
 this.createProject = async function (projectName) {
-  return new Promise((resolve, reject) => {
-    urlsprojects.create({
+  try {
+    const result = await urlsprojects.create({
       idKey: uniqid(),
       projectName,
       urlName: ''
     })
-      .then((result) => {
-        loggerService.info(`CREATE PROJECT - Project ${projectName} created`)
-        resolve(result)
-      })
-      .catch((error) => {
-        loggerService.error('\x1b[31m%s\x1b[0m', error)
-        reject(new SystemError())
-      })
-  })
+    loggerService.info(`CREATE PROJECT - Project ${projectName} created`)
+    return result
+  } catch (error) {
+    loggerService.error('\x1b[31m%s\x1b[0m', error)
+    throw new SystemError()
+  }
 }
 }
 

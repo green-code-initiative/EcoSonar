@@ -31,10 +31,10 @@ fi
 # Resolve API URL: CLI arg > .env > default
 # -----------------------------------------------------------------------------
 API_URL="${1:-${REACT_APP_BASE_URL_ECOSONAR_API:-http://localhost:3000}}"
-echo "============================================="
+echo "===============Phase========================="
 echo " EcoSonar - Building SonarQube plugin"
 echo " API URL : ${API_URL}"
-echo "============================================="
+echo "================End phase===================="
 # -----------------------------------------------------------------------------
 # Check prerequisites
 # -----------------------------------------------------------------------------
@@ -58,7 +58,7 @@ cd "${PLUGIN_DIR}"
 export REACT_APP_BASE_URL_ECOSONAR_API="${API_URL}"
 mvn clean package -DskipTests -Durl="${API_URL}"
 echo ""
-echo "============================================="
+echo "===============Status========================"
 echo " Build complete."
 echo " JAR location: EcoSonar-SonarQube/target/"
 echo "============================================="

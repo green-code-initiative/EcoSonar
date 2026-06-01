@@ -19,7 +19,6 @@ async function getOrCreateProject(projectName) {
 
 ConfigurationService.prototype.saveConfiguration = async function (projectName, w3cBool, carbonBool) {
   let idKey = null
-  let configExist = false
 
   try {
     idKey = await getOrCreateProject(projectName)
@@ -29,17 +28,14 @@ ConfigurationService.prototype.saveConfiguration = async function (projectName, 
 
   loggerService.info(`GET CONFIGURATION - Checking if project ${projectName} already has a config`)
   const existing = await configurationRepository.findConfiguration(idKey)
-  if (existing != null) {
-    configExist = true
-    loggerService.info(`GET CONFIGURATION - Project ${projectName} config present`)
-  }
 
-  if (!configExist) {
-    loggerService.info(`GET CONFIGURATION - Creating a config for the project ${projectName}`)
-    return configurationRepository.insertConfiguration(idKey, w3cBool, carbonBool)
-  } else {
+  if (existing != null) {
+    loggerService.info(`GET CONFIGURATION - Project ${projectName} config present`)
     const existingConfig = await configurationRepository.findConfiguration(idKey)
     return { Configuration: existingConfig ?? '' }
+  } else {
+    loggerService.info(`GET CONFIGURATION - Creating a config for the project ${projectName}`)
+    return configurationRepository.insertConfiguration(idKey, w3cBool, carbonBool)
   }
 }
 
