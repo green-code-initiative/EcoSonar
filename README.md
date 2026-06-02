@@ -8,7 +8,7 @@ User guide: https://github.com/Accenture/EcoSonar/blob/main/USER_GUIDE.md
 
 - Raising the awareness of delivery teams to environmental issues: enabling development teams to consider the environmental impact of digital technology during development and to promote knowledge of best eco-design and accessibility practices.
 - Helping developers to implement best eco-design and accessibility practices with:
-  - Static Code Analysis with SonarQube, and dedicated green coding rules with the addition of Plugin EcoCode (https://www.ecocode.io/)
+  - Static Code Analysis with SonarQube, and dedicated green coding rules with the addition of Plugin Creedengo (https://github.com/orgs/green-code-initiative/)
   - Dynamic Code Analysis with EcoSonar API using three open-source tools to analyze the application as it is rendered on a web browser (Green-IT Analysis/EcoIndex, Google Lighthouse and W3C Validator).
 - Get an environmental & performance monitoring solution to allow continuous improvement of delivery teams.
 
@@ -18,12 +18,10 @@ User guide: https://github.com/Accenture/EcoSonar/blob/main/USER_GUIDE.md
 - [Prerequisites](#prerequisites)
   - [Infrastructure Requirements](#infra)
 - [EcoSonar Local Installation](#installation)
-- [EcoCode Configuration](#ecocode-config)
 - [Audit Tools](#audit)
   - [GreenIT-Analysis/EcoIndex](#greenit-cnumr)
   - [Google Lighthouse](#ligthhouse)
   - [W3C Validator](#w3c)
-  - [Ecocode](#ecocode)
 - [About](#about)
 
 <a name="archi"></a>
@@ -41,7 +39,7 @@ The EcoSonar tool consists of:
 - Sonarqube plugins
   - Able to configure and retrieve EcoSonar audit reports on dynamic rendering analysis.
   - Launch an EcoSonar analysis by calling the API when a Sonarqube analysis is triggered.
-  - Add new eco-design coding rules in Sonarqube default configuration with EcoCode plugins.
+  - Add new eco-design coding rules in Sonarqube default configuration with Creedengo plugins.
 
 ![Architecture](./images/ecosonar-architecture.webp)
 
@@ -83,35 +81,6 @@ docker-compose up
 Follow instructions in both Readme file:
 - https://github.com/Accenture/EcoSonar/blob/main/EcoSonar-API/README.md
 - https://github.com/Accenture/EcoSonar/blob/main/EcoSonar-SonarQube/README.md
-
-
-<a name="ecocode-config"></a>
-
-## Ecocode Configuration
-
-For specific details on Ecocode, please look at their GitHub repository: https://github.com/green-code-initiative/ecoCode .
-You will find here `https://github.com/Accenture/EcoSonar/tree/main/EcoSonar-SonarQube/ecocode` the EcoCode Sonarqube plugins that needs to be imported into your Sonarqube instance.
-To install the ecocode plugins, please follow instruction from EcoSonar SonarQube plugin : https://github.com/Accenture/EcoSonar/blob/main/EcoSonar-SonarQube/README.md
-
-When using Sonarqube as code analysis, a default Quality Profile is set up for each language. If you want to use EcoCode rules related to eco-design, you will have to:
-
-- create a new Quality Profile based on the default one : click on the Setting icon for the languge you wish to extend and then Click on `Extend` and create the new Quality Profile
-
-![EcoSonar Quality Profile Creation](./images/java-quality-profile.webp)
-
-- Click on `Activate more` to add new rules to the Quality Profile
-
-![EcoSonar Quality Profile Set up](./images/ecosonar-add-rules.webp)
-
-- In the list of rules, filter using the tag `eco-design` or `ecocode`. You should have now displayed all rules integrated with Ecocode SonarQube plugin. To add them in your profile, click on `Bulk Change` and select `Active in ` your quality profile.
-
-![EcoSonar Quality Profile Activate Rules](./images/ecosonar-activate-rules.webp)
-
-- Go back in the `Quality Profile` page and set up the extended quality Profile as default one. SonarQube will now use this Quality Profile with ecodesign rules to audit your code.
-
-![EcoSonar Default Quality Profile](./images/ecosonar-default-quality-profile.webp)
-
-Do the same setup for each language you wish to use with Ecocode rules.
 
 <a name="audit"></a>
 
@@ -157,16 +126,6 @@ Official website: https://validator.w3.org/
 
 GitHub Link: https://github.com/zrrrzzt/html-validator
 
-<a name="ecocode"></a>
-
-### EcoCode
-
-EcoCode is a SonarQube plugin developed by a french open-source community called Green Code Initiative. Their goal is to share best practices of development, be aware of environmental responsibility when programming, and together construct rules and metrics for assigning to mobile and web applications an "environmental label". They have defined a list of green coding rules to be checked through a Sonarqube analysis to reduce RAM or CPU usage of software application.
-
-Official website: https://www.ecocode.io/
-
-GitHub Link: https://github.com/green-code-initiative
-
 <a name="about"></a>
 
 ## About
@@ -182,8 +141,6 @@ EcoIndex licence : https://creativecommons.org/licenses/by-nc-nd/2.0/fr/
 Google Lighthouse licence : https://github.com/GoogleChrome/lighthouse/blob/main/LICENSE
 
 W3C Validator licence : https://github.com/zrrrzzt/html-validator/blob/HEAD/LICENSE
-
-EcoCode licence : https://github.com/green-code-initiative/ecoCode/blob/main/LICENCE.md
 
 To know more on ecodesign best practices, EcoIndex Calculator and how an ecodesign website can be more efficient, please check these two articles from one of our colleagues:
 
